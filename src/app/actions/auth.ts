@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 import {
   forgotPasswordSchema,
@@ -33,7 +34,7 @@ export async function registerAction(_: FormState, formData: FormData): Promise<
   });
   if (!parsed.success) return zodErrors(parsed.error);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const siteUrl = getSiteUrl();
   const { fullName, email, password } = parsed.data;
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -52,7 +53,7 @@ export async function registerAction(_: FormState, formData: FormData): Promise<
 export async function forgotPasswordAction(_: FormState, formData: FormData): Promise<FormState> {
   const parsed = forgotPasswordSchema.safeParse({ email: formData.get("email") });
   if (!parsed.success) return zodErrors(parsed.error);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const siteUrl = getSiteUrl();
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     ...(siteUrl ? { redirectTo: `${siteUrl}/auth/callback?next=/reset-password` } : {}),

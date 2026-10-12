@@ -17,9 +17,9 @@
 
 | Función | Motivo | Restricción |
 | --- | --- | --- |
-| `is_organization_member` | Evita recursión RLS. | Sólo `authenticated`, `search_path=''`. |
-| `has_organization_role` | Decisión de rol centralizada. | Sólo `authenticated`, `search_path=''`. |
-| `shares_organization` | Permite nombres de compañeros. | Sólo `authenticated`, devuelve booleano. |
+| `private.is_organization_member` | Evita recursión RLS. | Esquema no expuesto; sólo `authenticated`, `search_path=''`. |
+| `private.has_organization_role` | Decisión de rol centralizada. | Esquema no expuesto; sólo `authenticated`, `search_path=''`. |
+| `private.shares_organization` | Permite nombres de compañeros. | Esquema no expuesto; sólo `authenticated`, devuelve booleano. |
 | `create_organization_with_owner` | Alta atómica e idempotente. | Sólo `authenticated`; deriva `auth.uid()`. |
 | Triggers privados | Integridad de perfiles, owners y timestamps. | Esquema `private` sin acceso API. |
 

@@ -43,9 +43,9 @@ npm run build
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Público | URL del proyecto Supabase. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Público | Publishable/anon key protegida por RLS. |
-| `NEXT_PUBLIC_SITE_URL` | Público | Origen canónico para callbacks de email. |
+| `NEXT_PUBLIC_SITE_URL` | Público | Origen HTTPS canónico para callbacks; nunca `localhost` fuera de desarrollo. |
 
-Los archivos `.env*` no se versionan salvo `.env.example`. Desarrollo, pruebas y producción deben usar proyectos y credenciales separados.
+Los archivos `.env*` no se versionan salvo `.env.example`. Desarrollo, pruebas y producción deben usar proyectos y credenciales separados. En previews de Vercel, los callbacks usan primero la URL HTTPS generada por la plataforma; `NEXT_PUBLIC_SITE_URL` queda como origen canónico explícito para entornos con dominio estable.
 
 ## Rutas
 

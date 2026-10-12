@@ -1,6 +1,67 @@
 begin;
 
 -- This script is executed by `supabase test db`. Any raised exception fails the test.
+do $$
+begin
+  if (select count(*) from pg_tables where schemaname = 'public') <> 16 then
+    raise exception 'expected 16 public tables';
+  end if;
+  if (
+    select count(*)
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity
+  ) <> 16 then
+    raise exception 'RLS is not enabled on every public table';
+  end if;
+  if (select count(*) from pg_policies where schemaname = 'public') <> 29 then
+    raise exception 'expected 29 public RLS policies';
+  end if;
+  if exists (
+    select 1
+    from pg_tables
+    where schemaname = 'public'
+      and has_table_privilege(
+        'anon',
+        format('%I.%I', schemaname, tablename),
+        'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER'
+      )
+  ) then
+    raise exception 'anon has a public table privilege';
+  end if;
+  if exists (
+    select 1
+    from pg_tables
+    where schemaname = 'public'
+      and not has_table_privilege(
+        'authenticated',
+        format('%I.%I', schemaname, tablename),
+        'SELECT'
+      )
+  ) then
+    raise exception 'authenticated is missing a public table SELECT grant';
+  end if;
+  if exists (
+    select 1
+    from pg_tables
+    where schemaname = 'public'
+      and has_table_privilege(
+        'authenticated',
+        format('%I.%I', schemaname, tablename),
+        'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER'
+      )
+  ) then
+    raise exception 'authenticated has an unintended table-level mutation grant';
+  end if;
+  if not has_column_privilege('authenticated', 'public.user_profiles', 'full_name', 'UPDATE')
+     or not has_column_privilege('authenticated', 'public.user_profiles', 'avatar_url', 'UPDATE')
+     or has_column_privilege('authenticated', 'public.user_profiles', 'id', 'UPDATE')
+  then
+    raise exception 'profile column grants do not match the intended surface';
+  end if;
+end;
+$$;
+
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 values
   ('00000000-0000-0000-0000-000000000000', '10000000-0000-0000-0000-000000000001', 'authenticated', 'authenticated', 'owner-a@example.test', '', now(), '{}', '{"full_name":"Owner A"}', now(), now()),

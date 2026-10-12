@@ -4,6 +4,7 @@
 
 1. `202610120001_foundation.sql`: organizaciones, perfiles, membresías, depósitos, ubicaciones, auditoría, helpers RLS y onboarding.
 2. `202610120002_logistics_foundation.sql`: modelo operativo inicial para catálogo, inventario, pedidos, recepciones, movimientos, reservas e insights.
+3. `20261012203052_harden_public_privileges.sql`: revoca grants automáticos de `anon`/`authenticated`, declara explícitamente la superficie de lectura y mueve los helpers RLS al esquema privado.
 
 Todas las claves internas son UUID. Las tablas empresariales llevan `organization_id`, índices por acceso frecuente, timestamps y constraints. Las relaciones sensibles usan claves foráneas compuestas `(id, organization_id)` para impedir referencias cruzadas.
 
@@ -18,6 +19,8 @@ Todas las claves internas son UUID. Las tablas empresariales llevan `organizatio
 5. Crea organización, membresía Owner, primer depósito y auditoría.
 
 La tabla de idempotencia vive en `private`, fuera de la API expuesta.
+
+Los helpers usados por las policies también viven en `private`. Conservan `EXECUTE` para `authenticated` porque PostgreSQL debe evaluarlos dentro de RLS, pero no se publican como endpoints RPC.
 
 ## Escrituras de stock
 
